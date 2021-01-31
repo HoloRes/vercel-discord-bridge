@@ -1,0 +1,25 @@
+{
+  "name": "vercel-discord-bridge",
+  "version": "1.0.0",
+  "description": "A bridge from Vercel to Discord to monitor deployments",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "discord-webhook-node": "^1.1.8",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HoloRes/vercel-discord-bridge.git"
+  },
+  "author": "Hololive Resort website team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HoloRes/vercel-discord-bridge/issues"
+  },
+  "homepage": "https://github.com/HoloRes/vercel-discord-bridge#readme"
+}
