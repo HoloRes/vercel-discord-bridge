@@ -10,7 +10,7 @@ const body = {
     url: config.vercelWebhookUrl
 };
 const axiosConfig = {
-    headers: { Authorization: `Bearer: ${config.vercelKey}` }
+    headers: { Authorization: `Bearer ${config.vercelKey}` }
 };
 
 axios.post("https://api.vercel.com/v1/integrations/webhooks", body, axiosConfig)

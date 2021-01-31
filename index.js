@@ -37,7 +37,7 @@ app.post("/webhook", verifySignatureMiddleware, (req, res) => {
             .setUrl(req.body.url)
             .setColor("#faf032")
             .setDescription(`Project: ${req.body.project}`)
-            .setFooter(`Deployment ID: N/A`)
+            .setFooter(`Deployment ID: ${req.body.deploymentId}`)
             .setTimestamp();
         hook.send(embed);
     } else if(req.body.type === "deployment-ready") {
@@ -46,7 +46,7 @@ app.post("/webhook", verifySignatureMiddleware, (req, res) => {
             .setUrl(req.body.url)
             .setColor("#32fc40")
             .setDescription(`Project: ${req.body.project}`)
-            .setFooter(`Deployment ID: N/A`)
+            .setFooter(`Deployment ID: ${req.body.deploymentId}`)
             .setTimestamp();
         hook.send(embed);
     } else if(req.body.type === "deployment-error") {
@@ -55,7 +55,7 @@ app.post("/webhook", verifySignatureMiddleware, (req, res) => {
             .setUrl(req.body.url)
             .setColor("#ff352e")
             .setDescription(`Project: ${req.body.project}`)
-            .setFooter(`Deployment ID: N/A`)
+            .setFooter(`Deployment ID: ${req.body.deploymentId}`)
             .setTimestamp();
         hook.send(embed);
     } else return res.status("400").json({code: "bad_request", error: "not a valid event type"})
