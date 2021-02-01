@@ -16,13 +16,21 @@ const hook = new Webhook(config.discordWebhookUrl);
 hook.setUsername('Vercel');
 hook.setAvatar('https://i.imgur.com/teXXn5w.png');
 
-function verifySignatureMiddleware(req, res, next) { // Based on: https://docs.github.com/en/developers/webhooks-and-events/securing-your-webhooks
-  const sig = req.get['X-Hub-Signature-256'] || '';
+// Based on: https://docs.github.com/en/developers/webhooks-and-events/securing-your-webhooks and https://gist.github.com/stigok/57d075c1cf2a609cb758898c0b202428
+function verifySignatureMiddleware(req, res, next) {
+  const payload = JSON.stringify(req.body);
+  if (!payload) return next();
+
+  const sig = req.get('X-Hub-Signature-256') || '';
   const hmac = crypto.createHmac('sha256', config.githubSecret);
-  const digest = Buffer.from(`sha256=${hmac.update(JSON.stringify(req.body)).digest('hex')}`, 'utf8');
+  const digest = Buffer.from(`sha256=${hmac.update(payload).digest('hex')}`, 'utf8');
   const checksum = Buffer.from(sig, 'utf8');
-  req.body.verified = crypto.timingSafeEqual(digest, checksum);
-  next();
+  console.log(digest.toString());
+  console.log(sig)
+  req.body.verified = (digest.length === checksum.length
+    ? crypto.timingSafeEqual(digest, checksum)
+    : false);
+  return next();
 }
 
 function sendEmbed(status, color) {
