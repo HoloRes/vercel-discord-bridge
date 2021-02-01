@@ -17,9 +17,10 @@ hook.setUsername('Vercel');
 hook.setAvatar('https://i.imgur.com/teXXn5w.png');
 
 function verifySignatureMiddleware(req, res, next) { // Based on: https://docs.github.com/en/developers/webhooks-and-events/securing-your-webhooks
+  const sig = req.get['X-Hub-Signature-256'] || '';
   const hmac = crypto.createHmac('sha256', config.githubSecret);
   const digest = Buffer.from(`sha256=${hmac.update(JSON.stringify(req.body)).digest('hex')}`, 'utf8');
-  const checksum = Buffer.from(req.get['X-Hub-Signature-256'], 'utf8')
+  const checksum = Buffer.from(sig, 'utf8');
   req.body.verified = crypto.timingSafeEqual(digest, checksum);
   next();
 }
@@ -44,7 +45,7 @@ app.post('/webhook', verifySignatureMiddleware, (req, res) => {
     });
   }
 
-  if(req.body.zen) return res.status(200).send("OK");
+  if (req.body.zen) return res.status(200).send('OK');
 
   if (!req.body.deployment_status) return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
 
@@ -52,16 +53,13 @@ app.post('/webhook', verifySignatureMiddleware, (req, res) => {
   if (!status.state || !status.target_url || !status.description || !status.environment) return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
 
   if (status.state === 'pending') {
-      sendEmbed(status, '#faf032');
-      res.status(200).send("OK");
-    }
-  else if (status.state === 'success') {
-      sendEmbed(status, '#32fc40');
-      res.status(200).send("OK");
-    }
-  else if (status.state === 'failure' || status.state === 'error') {
-      sendEmbed(status, '#ff352e');
-      res.status(200).send("OK");
-    }
-  else return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
+    sendEmbed(status, '#faf032');
+    res.status(200).send('OK');
+  } else if (status.state === 'success') {
+    sendEmbed(status, '#32fc40');
+    res.status(200).send('OK');
+  } else if (status.state === 'failure' || status.state === 'error') {
+    sendEmbed(status, '#ff352e');
+    res.status(200).send('OK');
+  } else return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
 });
