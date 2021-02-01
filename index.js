@@ -44,13 +44,24 @@ app.post('/webhook', verifySignatureMiddleware, (req, res) => {
     });
   }
 
+  if(req.body.zen) return res.status(200).send("OK");
+
   if (!req.body.deployment_status) return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
 
   const { deployment_status: status } = req.body;
   if (!status.state || !status.target_url || !status.description || !status.environment) return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
 
-  if (status.state === 'pending') sendEmbed(status, '#faf032');
-  else if (status.state === 'success') sendEmbed(status, '#32fc40');
-  else if (status.state === 'failure' || status.state === 'error') sendEmbed(status, '#ff352e');
+  if (status.state === 'pending') {
+      sendEmbed(status, '#faf032');
+      res.status(200).send("OK");
+    }
+  else if (status.state === 'success') {
+      sendEmbed(status, '#32fc40');
+      res.status(200).send("OK");
+    }
+  else if (status.state === 'failure' || status.state === 'error') {
+      sendEmbed(status, '#ff352e');
+      res.status(200).send("OK");
+    }
   else return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
 });
