@@ -25,8 +25,6 @@ function verifySignatureMiddleware(req, res, next) {
   const hmac = crypto.createHmac('sha256', config.githubSecret);
   const digest = Buffer.from(`sha256=${hmac.update(payload).digest('hex')}`, 'utf8');
   const checksum = Buffer.from(sig, 'utf8');
-  console.log(digest.toString());
-  console.log(sig)
   req.body.verified = (digest.length === checksum.length
     ? crypto.timingSafeEqual(digest, checksum)
     : false);
