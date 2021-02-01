@@ -34,7 +34,7 @@ function verifySignatureMiddleware(req, res, next) {
 function sendEmbed(status, color) {
   const embed = new MessageBuilder()
     .setTitle(status.description)
-    .setUrl(status.target_url)
+    .setURL(status.target_url)
     .setColor(color)
     .setDescription(`Environment: ${status.environment}`)
     .setFooter(`Deployment ID: ${status.target_url.substring(`https://${config.vercelPrefix}-`.length, `https://${config.vercelPrefix}-`.length + 9)}`)
