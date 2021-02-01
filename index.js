@@ -17,10 +17,10 @@ hook.setUsername('Vercel');
 hook.setAvatar('https://i.imgur.com/teXXn5w.png');
 
 function verifySignatureMiddleware(req, res, next) { // Based on: https://docs.github.com/en/developers/webhooks-and-events/securing-your-webhooks
-  const signature = crypto.createHmac('sha256', config.githubSecret)
-    .update(req)
-    .digest('hex');
-  req.body.verified = `sha256=${signature}` === req.headers['X-Hub-Signature-256'];
+  const hmac = crypto.createHmac('sha256', config.githubSecret);
+  const digest = Buffer.from(`sha256=${hmac.update(JSON.stringify(req.body).digest('hex'), 'utf8')}`);
+  const checksum = Buffer.from(req.get['X-Hub-Signature-256'], 'utf8')
+  req.body.verified = crypto.timingSafeEqual(digest, checksum);
   next();
 }
 
