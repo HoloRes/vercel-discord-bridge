@@ -1,11 +1,11 @@
 // Imports
 // Packages
-const {Webhook, MessageBuilder} = require("discord-webhook-node"),
-    express = require("express"),
-    crypto = require("crypto");
+const { Webhook, MessageBuilder } = require('discord-webhook-node');
+const express = require('express');
+const crypto = require('crypto');
 
 // Local files
-const config = require("./config");
+const config = require('./config');
 
 // Init
 const app = express();
@@ -13,50 +13,44 @@ app.listen(3000);
 app.use(express.json());
 
 const hook = new Webhook(config.discordWebhookUrl);
-hook.setUsername("Vercel");
-hook.setAvatar("https://i.imgur.com/gFLQbka.png");
+hook.setUsername('Vercel');
+hook.setAvatar('https://i.imgur.com/teXXn5w.png');
 
-function verifySignatureMiddleware(req, res, next) { // Based on: https://vercel.com/docs/api#integrations/webhooks/securing-webhooks
-    const signature = crypto.createHmac("sha1", config.vercelKey)
-        .update(req)
-        .digest("hex");
-    req.body.verified = signature === req.headers["x-vercel-signature"];
-    next();
+function verifySignatureMiddleware(req, res, next) { // Based on: https://docs.github.com/en/developers/webhooks-and-events/securing-your-webhooks
+  const signature = crypto.createHmac('sha256', config.githubSecret)
+    .update(req)
+    .digest('hex');
+  req.body.verified = `sha256=${signature}` === req.headers['X-Hub-Signature-256'];
+  next();
 }
 
-app.post("/webhook", verifySignatureMiddleware, (req, res) => {
-    if(!req.body.verified) return res.status(403).json({
-        code: "invalid_signature",
-        error: "signature didn't match"
-      });
+function sendEmbed(status, color) {
+  const embed = new MessageBuilder()
+    .setTitle(status.description)
+    .setUrl(status.target_url)
+    .setColor(color)
+    .setDescription(`Environment: ${status.environment}`)
+    .setFooter(`Deployment ID: ${status.target_url.substring(`https://${config.vercelPrefix}-`.length, `https://${config.vercelPrefix}-`.length + 9)}`)
+    .setTimestamp(status.created_at ? new Date(status.created_at) : new Date());
+  hook.send(embed);
+}
 
-    console.log(JSON.stringify(req.body, null, 2));
-    if(req.body.type === "deployment") {
-        const embed = new MessageBuilder()
-            .setTitle("New deployment created")
-            .setUrl(req.body.url)
-            .setColor("#faf032")
-            .setDescription(`Project: ${req.body.project}`)
-            .setFooter(`Deployment ID: ${req.body.deploymentId}`)
-            .setTimestamp();
-        hook.send(embed);
-    } else if(req.body.type === "deployment-ready") {
-        const embed = new MessageBuilder()
-            .setTitle("Deployment succesful")
-            .setUrl(req.body.url)
-            .setColor("#32fc40")
-            .setDescription(`Project: ${req.body.project}`)
-            .setFooter(`Deployment ID: ${req.body.deploymentId}`)
-            .setTimestamp();
-        hook.send(embed);
-    } else if(req.body.type === "deployment-error") {
-        const embed = new MessageBuilder()
-            .setTitle("Deployment failed")
-            .setUrl(req.body.url)
-            .setColor("#ff352e")
-            .setDescription(`Project: ${req.body.project}`)
-            .setFooter(`Deployment ID: ${req.body.deploymentId}`)
-            .setTimestamp();
-        hook.send(embed);
-    } else return res.status("400").json({code: "bad_request", error: "not a valid event type"})
+// eslint-disable-next-line consistent-return
+app.post('/webhook', verifySignatureMiddleware, (req, res) => {
+  if (!req.body.verified) {
+    return res.status(403).json({
+      code: 'invalid_signature',
+      error: "signature didn't match",
+    });
+  }
+
+  if (!req.body.deployment_status) return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
+
+  const { deployment_status: status } = req.body;
+  if (!status.state || !status.target_url || !status.description || !status.environment) return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
+
+  if (status.state === 'pending') sendEmbed(status, '#faf032');
+  else if (status.state === 'success') sendEmbed(status, '#32fc40');
+  else if (status.state === 'failure' || status.state === 'error') sendEmbed(status, '#ff352e');
+  else return res.status('400').json({ code: 'bad_request', error: 'not a valid body' });
 });
